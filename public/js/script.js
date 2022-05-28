@@ -1,5 +1,5 @@
 const socket = io('/')
-const myPeer = new Peer()
+const peers=[]
 
 
 const mirror=document.getElementById("mirror")
@@ -12,25 +12,40 @@ function addVideoStream(video, stream){
     video.addEventListener('loadedmetadata', () => { // Play the video as it loads
         video.play()
     })
-    mirror.append(video)}
+    mirror.append(video)
+}
 
 
-function connectToNewUser(userId, stream) {
-        const call = myPeer.call(userId, stream)
-        const video = document.createElement('video') 
-        call.on('stream', userVideoStream => {
-            console.log("recibiendo stream") 
-            addVideoStream(video, userVideoStream)
-        })
-        call.on('close', () => {
-            video.remove()
-        })
-    }
+function createPeer(userId, callerId ,stream) {
+       const peer=new SimplePeer({
+        initiator: true,
+        trickle: false,
+        stream
+       })
 
-myPeer.on('open', id => {
-        socket.emit('join-room', ROOM_ID, id)
-        console.log("peer establecido")
-})
+       peer.on('Signal', signal=>{
+           socket.emit('Sending signal',{userId,callerId,signal})
+       })
+
+       return peer
+}
+
+function addPeer(incomingSignal, callerId, stream){
+    const peer=new SimplePeer({
+        initiator: false,
+        trickle: false,
+        stream
+       })
+
+    peer.on('Signal', signal=>{
+        socket.emit('Returning signal',{signal,callerId})
+    })
+
+    peer.signal(incomingSignal)
+
+    return peer
+
+}
 
 navigator.mediaDevices.getUserMedia({
     video: true,
@@ -38,25 +53,41 @@ navigator.mediaDevices.getUserMedia({
 }).then(stream=>{
     addVideoStream(myVideo,stream)
 
-    myPeer.on('call', call => { 
-        call.answer(stream) 
-        const video = document.createElement('video')
-        call.on('stream', userVideoStream => {
-            
-            addVideoStream(video, userVideoStream)
+    socket.emit("join room", ROOM_ID)
+
+    socket.on("full room", room=>{
+        alert("Sala ocupada")
+        fetch("/")
+    }
+    )
+
+    socket.on("all users", users=>{
+        console.log(users)
+    })
+   /* socket.on("all users", users=>{
+            users.forEach(userID => {
+                const peer= createPeer(userId,socket.id,stream)
+                peers.push({
+                    peerID:userID,
+                    peer,
+                })
+            });
+
+    })
+
+    socket.on("user joined", payload=>{
+        const peer= addPeer(payload.signal,payload.callerId,stream)
+        peers.push({
+            peerID:payload.callerId,
+            peer,
         })
     })
 
-
-    socket.on('user-connected', userId => {
-        console.log("usuario conectado") // If a new user connect
-        connectToNewUser(userId, stream) 
-    })
-
-    socket.on('user-disconnected', userId => {
-        console.log(userId)
-    })
-
+    socket.on("Receiving returned signal", payload=>{
+        const item=peers.find(p => p.peerID===payload.id)
+        item.peer.signal(payload.signal)
+    })*/
+   
 })
 
 

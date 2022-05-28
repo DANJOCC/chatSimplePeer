@@ -1,0 +1,12 @@
+video {
+    width: 500px;
+    height: 500px;
+}
+
+#mirror{
+    display: flex;
+    flex-wrap:wrap;
+    
+    width: 1000px;
+    height: 1000px;
+}
