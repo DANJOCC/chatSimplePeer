@@ -8311,10 +8311,14 @@ navigator.mediaDevices.getUserMedia({
         })
 
         peers.forEach(conn=>{
-          conn.peer.on('stream', stream=>{
-            
-            addVideoStream(document.createElement('video'),stream)
-          })
+
+          if(payload.callerId===conn.peerID){
+              conn.peer.on('stream', stream=>{
+                console.log("la repeticion")
+              addVideoStream(document.createElement('video'),stream)
+            })
+          }
+
         })
        
     })
@@ -8322,13 +8326,10 @@ navigator.mediaDevices.getUserMedia({
     socket.on("receiving returned signal", payload=>{ //datos recibidos
         const item=peers.find(p => p.peerID===payload.id)
         item.peer.signal(payload.signal)
-
-        peers.forEach(conn=>{
-          conn.peer.on('stream', stream=>{
-            
-            addVideoStream(document.createElement('video'),stream)
-          })
+        item.peer.on('stream', stream=>{
+          addVideoStream(document.createElement('video'),stream)
         })
+        
     })
    
 

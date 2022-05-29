@@ -3,7 +3,8 @@ const path=require('path')
 const express=require('express')
 const app=express()
 const {Server}=require('socket.io')
-const {newRoom,getUsers,roomsIsEmpty,thereIsAroom,getRoom, newUser}=require("./controllers/rooms.controller")
+const {newRoom,getUsers,roomsIsEmpty,thereIsAroom,getRoom, newUser, getRoomOf, deleteUser}=require("./controllers/rooms.controller")
+const { disconnect } = require('process')
 
 
 app.set('views', path.join(__dirname,'public'))
@@ -40,8 +41,7 @@ io.on("connection", socket =>{
                  users:[socket.id]
             })
             
-            
-            socket.join(roomid)
+        
             
         }
 
@@ -58,6 +58,11 @@ io.on("connection", socket =>{
     socket.on("returning signal", payload => {
         io.to(payload.callerId).emit('receiving returned signal', { signal: payload.signal, id: socket.id });//envio los datos del peer al nuevo usuario
     });
+
+    socket.on("disconnect", ()=>{
+        deleteUser(socket.id) 
+        
+    })
 })
 
 server.listen(app.get('port'),()=>{
