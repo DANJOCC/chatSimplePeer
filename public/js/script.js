@@ -1,3 +1,4 @@
+var Peer = require('simple-peer')
 const socket = io('/')
 const peers=[]
 
@@ -17,7 +18,7 @@ function addVideoStream(video, stream){
 
 
 function createPeer(userId, callerId ,stream) {
-       const peer=new SimplePeer({
+       const peer=new Peer({
         initiator: true,
         trickle: false,
         stream
@@ -31,7 +32,7 @@ function createPeer(userId, callerId ,stream) {
 }
 
 function addPeer(incomingSignal, callerId, stream){
-    const peer=new SimplePeer({
+    const peer=new Peer({
         initiator: false,
         trickle: false,
         stream

@@ -2,6 +2,7 @@ const rooms=[]
 
 const newRoom= (room)=>{
     rooms.push(room)
+    return room
 }
 
 
@@ -9,9 +10,7 @@ const roomsIsEmpty=()=>{
     return rooms.length==0
 }
 
-const thereIsAroom=(id)=>{
-    return rooms.includes(id)
-}
+
 
 const getUsers = (id)=>{
    let index= rooms.findIndex( room=> room.id === id)
@@ -22,7 +21,10 @@ const getRoom=(roomid)=>{
     return rooms.find(room => room.id===roomid)
 }
 
-const newUser=(userID,roomId)=>{
+const thereIsAroom=(id)=>{
+    return getRoom(id)!=undefined
+}
+const newUser=(userID,roomid)=>{
     let room=getRoom(roomid)
     room.users.push(userID)
     return room

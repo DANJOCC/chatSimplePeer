@@ -13,7 +13,7 @@ app.set('port', process.env.PORT || 3000)
 
 app.use(express.static(path.join(__dirname,'public')))
 
-app.use(require('routes/rutas.routes'))
+app.use(require('./routes/ruta.routes'))
 
 const server=http.createServer(app)
 
@@ -23,29 +23,41 @@ io.on("connection", socket =>{
     socket.on("join room", roomid=>{
         let room
         if(thereIsAroom(roomid)){
+           
+         
           if(getRoom(roomid).users.length===4){
               socket.emit("full room")
               return
           }
             socket.join(roomid)
             room=newUser(socket.id,roomid)
-            
-            let usersToConnect = room.users.filter(id=> id !== socket.id)
-
-            socket.emit('all users', usersToConnect)
 
         }
         else{
 
-            newRoom({
+            room=newRoom({
                 id:roomid,
-                 users:[]
+                 users:[socket.id]
             })
-
+            
+            
             socket.join(roomid)
             
         }
+
+        let usersToConnect = room.users.filter(id=> id !== socket.id)
+
+           
+        socket.emit('all users', usersToConnect)
     })
+
+    socket.on("sending signal", payload => {
+        io.to(payload.userId).emit('user joined', { signal: payload.signal, callerId: payload.callerId });//emito a los usuarios los datos del peer
+    });
+
+    socket.on("returning signal", payload => {
+        io.to(payload.callerId).emit('receiving returned signal', { signal: payload.signal, id: socket.id });//envio los datos del peer al nuevo usuario
+    });
 })
 
 server.listen(app.get('port'),()=>{
